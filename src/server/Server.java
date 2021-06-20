@@ -1,7 +1,5 @@
 package server;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -32,35 +30,30 @@ public class Server {
     public static void greetingsUser(Connection user) {
         new Thread(() -> {
             String clientName;
-            DataInputStream in = null;
             try {
-                in = new DataInputStream(user.getSocket().getInputStream()); // Поток ввода
-                DataOutputStream out = new DataOutputStream(user.getSocket().getOutputStream()); // Поток вывода
-                out.writeUTF("Привет! Как вас зовут?");
-                clientName = in.readUTF(); // Принимает имя от клиента
+                user.getOut().writeUTF("Привет! Как вас зовут?");
+                clientName = user.getIn().readUTF(); // Принимает имя от клиента
                 user.setUserName(clientName);
-                out.writeUTF("Очень приятно, " + clientName + "! Присоединяйтесь к общению :)");
+                user.getOut().writeUTF("Очень приятно, " + clientName + "! Присоединяйтесь к общению :)");
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            sendMessage(user, in);
+            sendMessage(user);
         }).start();
     }
 
-    public static void sendMessage(Connection user, DataInputStream in) {
-        String request;
+    public static void sendMessage(Connection user) {
         while (true) {
             try {
-                request = in.readUTF(); // Принимает сообщение от клиента
+                String request = user.getIn().readUTF(); // Принимает сообщение от клиента
                 System.out.println(user.getUserName() + ": " + request);
                 for (Connection x :
                         clients) {
-                    if (x.getSocket() != user.getSocket()) { // Перебираем клиентов которые подключенны в настоящий момент
-                        DataOutputStream out = new DataOutputStream(x.getSocket().getOutputStream());
-                        out.writeUTF(user.getUserName() + " пишет: " + request); // Рассылает принятое сообщение всем клиентам кроме автора
+                    if (x != user) { // Перебираем клиентов которые подключенны в настоящий момент
+                        x.getOut().writeUTF(user.getUserName() + " пишет: " + request); // Рассылает принятое сообщение всем клиентам кроме автора
                     }
                 }
-            } catch (IOException ex) {
+            } catch (IOException e) {
                 removeDisconnectedUsers(user);
                 break;
             }
@@ -71,14 +64,13 @@ public class Server {
         for (Connection x : clients) { // Перебираем клиентов которые подключенны в настоящий момент
             if (user != x) {
                 try {
-                    DataOutputStream out = new DataOutputStream(x.getSocket().getOutputStream());
-                    out.writeUTF("Пользователь " + user.getUserName() + " покинул чат!"); // Рассылает принятое сообщение всем клиентам
+                    x.getOut().writeUTF("Пользователь " + user.getUserName() + " покинул чат!"); // Рассылает принятое сообщение всем клиентам
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }
-        clients.remove(user); // Удаление сокета, когда клиент отключился
+        clients.remove(user); // Удаление клиента, когда клиент отключился
     }
 
 }
