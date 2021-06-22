@@ -20,8 +20,9 @@ public class Client {
 
     /**
      * Method gets message from server in multithreading mode
+     *
      * @param user (all users)
-     *  */
+     */
 
     public static void getMessageFromServer(Connection user) throws IOException {
         new Thread(() -> {
@@ -38,8 +39,9 @@ public class Client {
 
     /**
      * Method reads message from users & sends them to server
+     *
      * @param user (all users)
-     *  */
+     */
 
     public static void printToConsoleAndSend(Connection user) throws IOException {
         Scanner scanner = new Scanner(System.in);

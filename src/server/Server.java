@@ -12,9 +12,8 @@ public class Server {
 
     private static List<Connection> clients = new ArrayList<>();
 
-    public static void main(String[] args) {
-        try {
-            ServerSocket serverSocket = new ServerSocket(8188); // Создаёи серверный сокет
+    public static void main(String[] args) throws IOException {
+        try (ServerSocket serverSocket = new ServerSocket(8188)) {// Создаёи серверный сокет
             ServerConsole.print("Сервер запущен.", MessageStatus.WAITING);
             while (true) { // бесконечный цикл для ожидания подключения клиентов
                 ServerConsole.print("Ожидаю подключения клиентов...", MessageStatus.WAITING);
@@ -24,15 +23,14 @@ public class Server {
                 clients.add(user);
                 greetingsUser(user);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     /**
      * Method sends greeting message to each user & receives user's name
+     *
      * @param user (all users)
-     *  */
+     */
 
     public static void greetingsUser(Connection user) {
         new Thread(() -> {
@@ -40,9 +38,9 @@ public class Server {
                 user.getOut().writeUTF("Привет! Как вас зовут?");
                 String clientName = user.getIn().readUTF(); // Принимает имя от клиента
                 user.setUserName(clientName);
+                ServerConsole.print("Очень приятно, " + user.getUserName() + "! Присоединяйтесь к общению :)", MessageStatus.ENTERING);
                 user.getOut().writeUTF("Очень приятно, " + clientName + "! Присоединяйтесь к общению :)");
             } catch (IOException e) {
-                e.printStackTrace();
             }
             sendMessage(user);
         }).start();
@@ -50,8 +48,9 @@ public class Server {
 
     /**
      * Method sends & receives messages to / from every sides
+     *
      * @param user (all users)
-     *  */
+     */
 
     public static void sendMessage(Connection user) {
         while (true) {
@@ -73,8 +72,9 @@ public class Server {
 
     /**
      * Method removes disconnected users & sends notifications to printer's console
+     *
      * @param user (all users)
-     *  */
+     */
 
     public static void removeDisconnectedUsers(Connection user) {
         for (Connection x : clients) { // Перебираем клиентов которые подключенны в настоящий момент
