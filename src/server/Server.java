@@ -1,5 +1,7 @@
 package server;
 
+import client.Connection;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -13,12 +15,12 @@ public class Server {
     public static void main(String[] args) {
         try {
             ServerSocket serverSocket = new ServerSocket(8188); // Создаёи серверный сокет
-            System.out.println("Сервер запущен.");
+            ServerConsole.print("Сервер запущен.", MessageStatus.WAITING);
             while (true) { // бесконечный цикл для ожидания подключения клиентов
-                System.out.println("Ожидаю подключения клиентов...");
+                ServerConsole.print("Ожидаю подключения клиентов...", MessageStatus.WAITING);
                 Socket socket = serverSocket.accept(); // Ожидаем подключения клиента
-                System.out.println("Клиент подключился");
                 Connection user = new Connection(socket);
+                ServerConsole.print("Клиент подключился", MessageStatus.ENTERING);
                 clients.add(user);
                 greetingsUser(user);
             }
@@ -27,12 +29,16 @@ public class Server {
         }
     }
 
+    /**
+     * Method sends greeting message to each user & receives user's name
+     * @param user (all users)
+     *  */
+
     public static void greetingsUser(Connection user) {
         new Thread(() -> {
-            String clientName;
             try {
                 user.getOut().writeUTF("Привет! Как вас зовут?");
-                clientName = user.getIn().readUTF(); // Принимает имя от клиента
+                String clientName = user.getIn().readUTF(); // Принимает имя от клиента
                 user.setUserName(clientName);
                 user.getOut().writeUTF("Очень приятно, " + clientName + "! Присоединяйтесь к общению :)");
             } catch (IOException e) {
@@ -42,11 +48,16 @@ public class Server {
         }).start();
     }
 
+    /**
+     * Method sends & receives messages to / from every sides
+     * @param user (all users)
+     *  */
+
     public static void sendMessage(Connection user) {
         while (true) {
             try {
                 String request = user.getIn().readUTF(); // Принимает сообщение от клиента
-                System.out.println(user.getUserName() + ": " + request);
+                ServerConsole.print(user.getUserName() + " пишет: " + request, MessageStatus.MESSAGING);
                 for (Connection x :
                         clients) {
                     if (x != user) { // Перебираем клиентов которые подключенны в настоящий момент
@@ -60,6 +71,11 @@ public class Server {
         }
     }
 
+    /**
+     * Method removes disconnected users & sends notifications to printer's console
+     * @param user (all users)
+     *  */
+
     public static void removeDisconnectedUsers(Connection user) {
         for (Connection x : clients) { // Перебираем клиентов которые подключенны в настоящий момент
             if (user != x) {
@@ -70,6 +86,7 @@ public class Server {
                 }
             }
         }
+        ServerConsole.print("Пользователь " + user.getUserName() + " покинул чат!", MessageStatus.DISCONNECT);
         clients.remove(user); // Удаление клиента, когда клиент отключился
     }
 

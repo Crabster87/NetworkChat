@@ -1,4 +1,4 @@
-package server;
+package client;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -16,7 +16,7 @@ public class Connection {
 
     public Connection(Socket socket) throws IOException {
         this.socket = socket;
-        this.userName = "";
+        this.userName = "Anonymous";
         this.uuid = UUID.randomUUID();
         this.in = new DataInputStream(socket.getInputStream());
         this.out = new DataOutputStream(socket.getOutputStream());
@@ -26,16 +26,8 @@ public class Connection {
         this.userName = userName;
     }
 
-    public Socket getSocket() {
-        return socket;
-    }
-
     public String getUserName() {
         return userName;
-    }
-
-    public UUID getUuid() {
-        return uuid;
     }
 
     public DataInputStream getIn() {

@@ -1,7 +1,5 @@
 package client;
 
-import server.Connection;
-
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Scanner;
@@ -20,18 +18,28 @@ public class Client {
         }
     }
 
+    /**
+     * Method gets message from server in multithreading mode
+     * @param user (all users)
+     *  */
+
     public static void getMessageFromServer(Connection user) throws IOException {
         new Thread(() -> {
             while (true) {
                 try {
                     String response = user.getIn().readUTF(); // ѕринимаем сообщение от сервера
-                    System.out.println(response); //ѕечатаем на консоль прин€тое сообщение от сервера
+                    System.out.println(response); // ѕечатаем на консоль прин€тое сообщение от сервера
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         }).start();
     }
+
+    /**
+     * Method reads message from users & sends them to server
+     * @param user (all users)
+     *  */
 
     public static void printToConsoleAndSend(Connection user) throws IOException {
         Scanner scanner = new Scanner(System.in);
@@ -42,3 +50,4 @@ public class Client {
     }
 
 }
+
